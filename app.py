@@ -50,10 +50,27 @@ if town == placeholder:
     st.warning("Please select a Town to continue.")
     st.stop()
 raw_town = dict(town_pairs)[town]
-flat_type = st.selectbox("Select Flat Type", df['flat_type'].unique())
+placeholder_ft = "Select a Flat Type"
+raw_flat_types = df[df['town'] == raw_town]['flat_type'].unique().tolist()
+flat_type_pairs = sorted([(ft.title(), ft) for ft in raw_flat_types], key=lambda x: x[0])
+flat_type_display = st.selectbox(
+    "Select Flat Type", [placeholder_ft] + [d for d, _ in flat_type_pairs]
+)
+if flat_type_display == placeholder_ft:
+    st.warning("Please select a Flat Type to continue.")
+    st.stop()
+flat_type = dict(flat_type_pairs)[flat_type_display]
+
+placeholder_fm = "Select a Flat Model"
+raw_flat_models = df[(df["town"] == raw_town) & (df["flat_type"] == flat_type)]["flat_model"].unique().tolist()
+flat_models_for_type = sorted(raw_flat_models)
+flat_model = st.selectbox("Select Flat Model", [placeholder_fm] + flat_models_for_type)
+if flat_model == placeholder_fm:
+    st.warning("Please select a Flat Model to continue.")
+    st.stop()
+
 floor_area = st.slider("Floor Area (sqm)", 30, 200, 90)
 storey_range = st.selectbox("Select Storey Range", df['storey_range'].unique())
-flat_model = st.selectbox("Select Flat Model", df['flat_model'].unique())
 resale_year = st.slider("Resale Year", int(df['resale_year'].min()), int(df['resale_year'].max()), 2025)
 lease_commence_date = st.slider("Lease Commence Year", 1966, 2023, 2005)
 
@@ -100,5 +117,5 @@ trend_data = trend_data.dropna(subset=['month'])
 monthly_avg = trend_data.groupby('month')['resale_price'].mean().reset_index()
 
 # Streamlit line chart
-st.subheader(f"Avg Resale Price in {town} ({flat_type})")
+st.subheader(f"Avg Resale Price in {town} ({flat_type_display})")
 st.scatter_chart(monthly_avg.set_index('month')['resale_price'])
