@@ -1,9 +1,31 @@
 import streamlit as st
 import pandas as pd
 import joblib
-# import matplotlib.pyplot as plt
-# import matplotlib.dates as mdates
 
+# Slider styling: bright orange for dark mode
+st.markdown(
+    """
+<style>
+[data-baseweb="slider"] .rc-slider-track {
+    background-color: #FFA500 !important;
+}
+[data-baseweb="slider"] .rc-slider-handle {
+    border-color: #FFA500 !important;
+    background-color: #FFA500 !important;
+}
+[data-baseweb="slider"] .rc-slider-handle:focus,
+[data-baseweb="slider"] .rc-slider-handle:hover {
+    border-color: #FFA500 !important;
+    box-shadow: 0 0 5px #FFA500 !important;
+}
+[data-baseweb="slider"] .rc-slider-dot-active {
+    border-color: #FFA500 !important;
+    background-color: #FFA500 !important;
+}
+</style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Load data and cache
 @st.cache_data
@@ -15,7 +37,14 @@ df = load_data('cleaned_hdb_resale_price_data.csv')
 
 st.title("HDB Resale Price Predictor")
 # User inputs
-town = st.selectbox("Select Town", df['town'].unique())
+raw_towns = df['town'].unique().tolist()
+town_pairs = sorted([(t.title(), t) for t in raw_towns], key=lambda x: x[0])
+placeholder = "Select a Town"
+town = st.selectbox("Select Town", [placeholder] + [d for d, _ in town_pairs])
+if town == placeholder:
+    st.warning("Please select a Town to continue.")
+    st.stop()
+raw_town = dict(town_pairs)[town]
 flat_type = st.selectbox("Select Flat Type", df['flat_type'].unique())
 floor_area = st.slider("Floor Area (sqm)", 30, 200, 90)
 storey_range = st.selectbox("Select Storey Range", df['storey_range'].unique())
@@ -28,7 +57,7 @@ remaining_lease = (lease_commence_date + 99) - resale_year
 
 # Predict
 input_df = pd.DataFrame([{ 
-    'town': town,
+    'town': raw_town,
     'flat_type': flat_type,
     'floor_area_sqm': floor_area,
     'remaining_lease': remaining_lease,
@@ -60,7 +89,7 @@ st.subheader("Historical Price Trends")
 
 # Filtered trend data
 # trend_data = df[(df['town'] == town) & (df['flat_type'] == flat_type)].copy()
-trend_data = df[(df['town'] == town) & (df['flat_type'] == flat_type)].copy()
+trend_data = df[(df['town'] == raw_town) & (df['flat_type'] == flat_type)].copy()
 trend_data['month'] = pd.to_datetime(trend_data['month'], errors='coerce')
 trend_data = trend_data.dropna(subset=['month'])
 monthly_avg = trend_data.groupby('month')['resale_price'].mean().reset_index()
@@ -68,26 +97,3 @@ monthly_avg = trend_data.groupby('month')['resale_price'].mean().reset_index()
 # Streamlit line chart
 st.subheader(f"Avg Resale Price in {town} ({flat_type})")
 st.scatter_chart(monthly_avg.set_index('month')['resale_price'])
-
-# # Filtered trend data
-# trend_data = df[(df['town'] == town) & (df['flat_type'] == flat_type)]
-# monthly_avg = trend_data.groupby('month')['resale_price'].mean().reset_index()
-
-# # Plotting
-# fig, ax = plt.subplots(figsize=(10, 4))
-# ax.plot(monthly_avg['month'], monthly_avg['resale_price'], marker='o')
-
-# # Clean and readable x-axis formatting
-# ax.xaxis.set_major_locator(mdates.YearLocator())
-# ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-
-# fig.autofmt_xdate()  # Auto-rotate if needed
-
-# ax.set_title(f"Avg Resale Price in {town} ({flat_type})")
-# ax.set_xlabel("Month")
-# ax.set_ylabel("Average Resale Price (SGD)")
-# ax.grid(True)
-
-# st.pyplot(fig)
-
-
