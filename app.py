@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+st.set_page_config(
+    page_title="Property Price Analyzer",
+    page_icon="🏠",
+)
+
 # Slider styling: bright orange for dark mode
 st.markdown(
     """
@@ -35,7 +40,7 @@ def load_data(path):
 
 df = load_data('cleaned_hdb_resale_price_data.csv')
 
-st.title("HDB Resale Price Predictor")
+st.title("Property Price Analyzer")
 # User inputs
 raw_towns = df['town'].unique().tolist()
 town_pairs = sorted([(t.title(), t) for t in raw_towns], key=lambda x: x[0])
