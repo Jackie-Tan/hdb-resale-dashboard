@@ -143,7 +143,6 @@ st.markdown("---")
 st.subheader("Historical Price Trends")
 
 # Filtered trend data
-# trend_data = df[(df['town'] == town) & (df['flat_type'] == flat_type)].copy()
 trend_data = df[(df['town'] == raw_town) & (df['flat_type'] == flat_type)].copy()
 trend_data['month'] = pd.to_datetime(trend_data['month'], errors='coerce')
 trend_data = trend_data.dropna(subset=['month'])
